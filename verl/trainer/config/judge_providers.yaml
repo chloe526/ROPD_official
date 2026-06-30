@@ -7,6 +7,17 @@ profiles:
     api_key_env: OPENAI_API_KEY
     base_url_env: OPENAI_BASE_URL
     default_api_style: responses
+
+  # OpenAI-compatible endpoint using the standard chat/completions API.
+  # Use this for DeepSeek, Azure OpenAI, company LLM gateways, or any provider
+  # that does not support OpenAI's newer Responses API.
+  # Activate with: ROPD_JUDGE_PROFILE=openai_chat
+  openai_chat:
+    provider: openai_compatible
+    backend: openai
+    api_key_env: OPENAI_API_KEY
+    base_url_env: OPENAI_BASE_URL
+    default_api_style: chat_completions
     transport:
       max_retries: 2
       initial_backoff_seconds: 1.0
