@@ -14,8 +14,14 @@
 
 import json
 import os
+import sys
+from pathlib import Path
 
 from ray._private.runtime_env.constants import RAY_JOB_CONFIG_JSON_ENV_VAR
+
+# Absolute path to the active venv so Ray worker uv hooks use it instead of
+# creating a fresh empty one in the worker's temp extraction directory.
+_VENV_PATH = str(Path(sys.prefix).resolve())
 
 PPO_RAY_RUNTIME_ENV = {
     "env_vars": {
@@ -31,6 +37,11 @@ PPO_RAY_RUNTIME_ENV = {
         # https://docs.vllm.ai/en/latest/usage/troubleshooting.html?h=nccl_cumem_enable#known-issues
         # https://github.com/vllm-project/vllm/blob/c6b0a7d3ba03ca414be1174e9bd86a97191b7090/vllm/worker/worker_base.py#L445
         "NCCL_CUMEM_ENABLE": "0",
+        # Point uv to our pre-built venv so Ray worker uv hooks don't create a
+        # fresh empty environment in the worker's temp extraction directory.
+        "VIRTUAL_ENV": _VENV_PATH,
+        "UV_PROJECT_ENVIRONMENT": _VENV_PATH,
+        "UV_NO_SYNC": "1",
     },
 }
 
@@ -46,7 +57,7 @@ def get_ppo_ray_runtime_env():
 
     runtime_env = {
         "env_vars": PPO_RAY_RUNTIME_ENV["env_vars"].copy(),
-        **({"working_dir": None} if working_dir is None else {}),
+        **({"working_dir": working_dir} if working_dir is not None else {}),
     }
     for key in list(runtime_env["env_vars"].keys()):
         if os.environ.get(key) is not None:
